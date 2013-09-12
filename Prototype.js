@@ -30,18 +30,8 @@
     // and a depth of 2, we get
     //    grainType = T
     //    iterationSpace = [5, 4]
-    var iterationSpace = [];
-    var totalLength = 1;
-    var grainType = arrayType;
-    for (var i = 0; i < depth; i++) {
-      if (grainType instanceof ArrayType) {
-        iterationSpace.push(grainType.length);
-        totalLength *= grainType.length;
-        grainType = grainType.elementType;
-      } else {
-        throw new RangeError("Depth too high");
-      }
-    }
+    var [iterationSpace, grainType, totalLength] =
+      computeIterationSpace(arrayType, depth);
 
     // Create a zeroed instance with no data
     var result = new arrayType();
@@ -71,6 +61,22 @@
     return result;
   }
 
+  function computeIterationSpace(arrayType, depth) {
+    var iterationSpace = [];
+    var totalLength = 1;
+    var grainType = arrayType;
+    for (var i = 0; i < depth; i++) {
+      if (grainType instanceof ArrayType) {
+        iterationSpace.push(grainType.length);
+        totalLength *= grainType.length;
+        grainType = grainType.elementType;
+      } else {
+        throw new RangeError("Depth too high");
+      }
+    }
+    return [iterationSpace, grainType, totalLength];
+  }
+
   function increment(indices, iterationSpace) {
     // Increment something like
     //     [5, 5, 7, 8]
@@ -94,4 +100,76 @@
       n -= 1;
     }
   }
+
+  ArrayType.prototype.buildPar = Array.prototype.build;
+
+  ArrayType.prototype.mapPar = function(a, b, c) {
+    // Arguments: [depth], [outputArrayType], [func]
+    // FIXME we need any
+    if (typeof a === "function")
+      return mapExplicit(this, 1, any, a);
+    else if (typeof a === "number" && typeof b === "function")
+      return mapExplicit(this, a, any, b);
+    else if (typeof a === "object" && typeof b === "function")
+      return mapExplicit(this, 1, a, b);
+    else (typeof c === "function")
+      return mapExplicit(this, a, b, c);
+  };
+
+  function mapExplicit(inArray, depth, outputType, func) {
+    if (depth <= 0 || (depth|0) !== depth)
+      throw new RangeError("Bad depth");
+
+    if (outputType.variable)
+      throw new TypeError("Can't build unsized array type");
+
+    // Compute iteration space for input and output and compare
+    var inputType = TypedObject.type(inArray);
+    var [inIterationSpace, inGrainType, _] =
+      computeIterationSpace(inputType, depth);
+    var [iterationSpace, outGrainType, totalLength] =
+      computeIterationSpace(outputType, depth);
+    for (var i = 0; i < depth; i++)
+      if (inIterationSpace[i] !== iterationSpace[i])
+        throw new TypeError("Incompatible iteration space in input and output type");
+
+    // Create a zeroed instance with no data
+    var result = new outputType();
+
+    var indices = [];
+    for (var i = 0; i < depth; i++)
+      indices.push(0);
+
+    // FIXME add redimension, rewrite using that
+    // FIXME test for Handle.move
+
+    var inHandle = inGrainType.handle();
+    var outHandle = outGrainType.handle();
+
+    var inGrainTypeIsScalar = !(inGrainType instanceof ArrayType ||
+                                inGrainType instanceof StructType);
+
+    for (var i = 0; i < totalLength; i++) {
+      // Position handle to point at &result[...indices]
+      Handle.move.apply(null, [inHandle, result].concat(indices));
+      Handle.move.apply(null, [outHandle, result].concat(indices));
+
+      // Awkward. Reify if this is a scalar.
+      var element = (inGrainTypeIsScalar ? Handle.get(inHandle) : inHandle);
+
+      // Invoke func(element, ...indices, collection, out)
+      var args = [element];
+      Array.push.apply(args, indices);
+      args.push(inArray, outHandle);
+      var r = func.apply(null, args);
+      if (r !== undefined)
+        Handle.set(outHandle, r); // *handle = r
+
+      // Increment indices.
+      increment(indices, iterationSpace);
+    }
+
+    return result;
+  }
+
 })();

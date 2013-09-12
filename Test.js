@@ -76,4 +76,3 @@ function twoDimensionalArrayOfStructsWithDepth1() {
 }
 
 twoDimensionalArrayOfStructsWithDepth1();
-
