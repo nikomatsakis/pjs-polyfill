@@ -165,7 +165,7 @@
 
     for (var i = 0; i < totalLength; i++) {
       // Position handle to point at &result[...indices]
-      Handle.move.apply(null, [inHandle, result].concat(indices));
+      Handle.move.apply(null, [inHandle, inArray].concat(indices));
       Handle.move.apply(null, [outHandle, result].concat(indices));
 
       // Awkward. Reify if this is a scalar.

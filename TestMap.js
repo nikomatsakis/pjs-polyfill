@@ -16,12 +16,12 @@ function mapOneDimArrayOfStructsToStructs() {
   var i1 = type.build(wrapG);
   var r1 = i1.mapPar(type, doubleG);
   var r2 = i1.mapPar(type, 1, doubleG);
+  var r3 = i1.mapPar(type, 1, (g, _, out) => { out.f = g.f * 2; });
   assertTypedEqual(type, r1, new type([{f:0}, {f:2},
                                        {f:4}, {f:6}]));
   assertTypedEqual(type, r1, r2);
+  assertTypedEqual(type, r1, r3);
 }
-
-mapOneDimArrayOfStructsToStructs();
 
 function mapTwoDimArrayOfStructsToStructs() {
   var rowtype = new ArrayType(Grain, 2);
@@ -29,22 +29,37 @@ function mapTwoDimArrayOfStructsToStructs() {
   var i1 = type.build(2, tenG);
   var r1 = i1.mapPar(type, 2, doubleG);
   var r2 = i1.mapPar(type, 1, (m) => m.mapPar(rowtype, 1, doubleG));
-  assertTypedEqual(type, r1, new type([[{f:00}, {f:01}],
-                                       [{f:10}, {f:11}]]));
+  var r3 = i1.mapPar(type, 1, (m, _, out) => { out[0].f = m[0].f * 2; out[1].f = m[1].f * 2; });
+  assertTypedEqual(type, r1, new type([[{f:00}, {f:02}],
+                                       [{f:20}, {f:22}]]));
   assertTypedEqual(type, r1, r2);
+  assertTypedEqual(type, r1, r3);
 }
-
-mapTwoDimArrayOfStructsToStructs();
 
 function mapOneDimArrayOfStructsToArrayOfStructs() {
   var Line = new ArrayType(Grain, 2);
   var Box = new ArrayType(Line, 2);
   var i1 = Line.build(wrapG);
   var r1 = i1.mapPar(Box, (g) => Line.build((y) => tenG(g.f, y)));
-  var r2 = i1.mapPar(Box, (g) => i1.mapPar(Line, (y) => tenG(g.f, y)));
+  var r2 = i1.mapPar(Box, (g) => i1.mapPar(Line, (y) => tenG(g.f, y.f)));
+  var r3 = i1.mapPar(Box, (g, _, out) => { out[0] = tenG(g.f, 0); out[1] = tenG(g.f, 1); });
   assertTypedEqual(Box, r1, new Box([[{f:00}, {f:01}],
                                      [{f:10}, {f:11}]]));
   assertTypedEqual(Box, r1, r2);
+  assertTypedEqual(Box, r1, r3);
 }
 
-mapOneDimArrayOfStructsToArrayOfStructs();
+try {
+
+  mapOneDimArrayOfStructsToStructs();
+
+  mapTwoDimArrayOfStructsToStructs();
+
+  mapOneDimArrayOfStructsToArrayOfStructs();
+
+} catch (e) {
+  print(e.name);
+  print(e.message);
+  print(e.stack);
+  throw e;
+}
