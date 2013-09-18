@@ -120,7 +120,6 @@
 
   ArrayType.prototype.prototype.mapPar = function(a, b, c) {
     // Arguments: outputArrayType, [depth], func
-    const any = {name:"not-yet-defined"}; // FIXME we need any
     if (typeof a !== "object")
       throw new TypeError("missing output array type argument to ArrayType mapPar");
     else if (typeof b === "number" && typeof c === "function")
