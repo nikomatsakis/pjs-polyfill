@@ -35,3 +35,16 @@ function mapTwoDimensionalArrayOfStructsToStructs() {
 }
 
 mapTwoDimensionalArrayOfStructsToStructs();
+
+function mapOneDimensionalArrayOfStructsToArrayOfStructs() {
+  var Line = new ArrayType(Grain, 2);
+  var Box = new ArrayType(Line, 2);
+  var i1 = Line.build(wrapG);
+  var r1 = i1.mapPar(Box, (g) => Line.build((y) => tenG(g.f, y)));
+  var r2 = i1.mapPar(Box, (g) => i1.mapPar(Line, (y) => tenG(g.f, y)));
+  assertTypedEqual(Box, r1, new Box([[{f:00}, {f:01}],
+                                     [{f:10}, {f:11}]]));
+  assertTypedEqual(Box, r1, r2);
+}
+
+mapOneDimensionalArrayOfStructsToArrayOfStructs();
