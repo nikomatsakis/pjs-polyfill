@@ -1,29 +1,4 @@
-var ArrayType = TypedObject.ArrayType;
-var StructType = TypedObject.StructType;
-var Handle = TypedObject.Handle;
-var uint8 = TypedObject.uint8;
-var uint16 = TypedObject.uint16;
-var uint32 = TypedObject.uint32;
-var int8 = TypedObject.int8;
-var int16 = TypedObject.int16;
-var int32 = TypedObject.int32;
-var float32 = TypedObject.float32;
-var float64 = TypedObject.float64;
-
-function assertTypedEqual(type, a, b) {
-  if (type instanceof ArrayType) {
-    assertEq(a.length, type.length);
-    assertEq(b.length, type.length);
-    for (var i = 0; i < type.length; i++)
-      assertTypedEqual(type.elementType, a[i], b[i])
-  } else if (type instanceof StructType) {
-    for (var fieldName in type.fieldNames) {
-      assertTypedEqual(type.fieldTypes[fieldName],
-                       a[fieldName],
-                       b[fieldName]);
-    }
-  }
-}
+if (typeof(libdir) === "undefined") { load("Util.js"); } else { load(libdir+"/"+"Util.js"); }
 
 function oneDimensionalArrayOfStructs() {
   var grain = new StructType({f: uint32});
@@ -34,8 +9,6 @@ function oneDimensionalArrayOfStructs() {
                                        {f:4}, {f:6}]));
   assertTypedEqual(type, r1, r2);
 }
-
-oneDimensionalArrayOfStructs();
 
 function twoDimensionalArrayOfStructsWithDepth2() {
   var grain = new StructType({f: uint32});
@@ -50,11 +23,9 @@ function twoDimensionalArrayOfStructsWithDepth2() {
   });
 
   assertTypedEqual(type, r1, new type([[{f:00}, {f:01}],
-                                       [{f:10}, {f:10}]]));
+                                       [{f:10}, {f:11}]]));
   assertTypedEqual(type, r1, r2);
 }
-
-twoDimensionalArrayOfStructsWithDepth2();
 
 function twoDimensionalArrayOfStructsWithDepth1() {
   var grain = new ArrayType(new StructType({f: uint32}), 2);
@@ -71,8 +42,21 @@ function twoDimensionalArrayOfStructsWithDepth1() {
   });
 
   assertTypedEqual(type, r1, new type([[{f:00}, {f:01}],
-                                       [{f:10}, {f:10}]]));
+                                       [{f:10}, {f:11}]]));
   assertTypedEqual(type, r1, r2);
 }
 
-twoDimensionalArrayOfStructsWithDepth1();
+try {
+
+  oneDimensionalArrayOfStructs();
+
+  twoDimensionalArrayOfStructsWithDepth2();
+
+  twoDimensionalArrayOfStructsWithDepth1();
+
+} catch (e) {
+  print(e.name);
+  print(e.message);
+  print(e.stack);
+  throw e;
+}

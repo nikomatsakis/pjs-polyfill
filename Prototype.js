@@ -71,7 +71,7 @@
         totalLength *= grainType.length;
         grainType = grainType.elementType;
       } else {
-        throw new RangeError("Depth too high");
+        throw new RangeError("Depth "+depth+" too high");
       }
     }
     return [iterationSpace, grainType, totalLength];
@@ -103,17 +103,31 @@
 
   ArrayType.prototype.buildPar = Array.prototype.build;
 
-  ArrayType.prototype.mapPar = function(a, b, c) {
-    // Arguments: [depth], [outputArrayType], [func]
-    // FIXME we need any
-    if (typeof a === "function")
-      return mapExplicit(this, 1, any, a);
-    else if (typeof a === "number" && typeof b === "function")
-      return mapExplicit(this, a, any, b);
-    else if (typeof a === "object" && typeof b === "function")
+  /*
+   * For code like:
+   *
+   *   var A = new ArrayType(uint8, 10);
+   *
+   * then
+   *
+   *   A.prototype.__proto__ === ArrayType.prototype.prototype
+   *
+   * and thus calls like (new A()).mapPar can reach methods attached
+   * to ArrayType.prototype.prototype (but not methods attached to
+   * ArrayType.prototype).
+   *
+   */
+
+  ArrayType.prototype.prototype.mapPar = function(a, b, c) {
+    // Arguments: outputArrayType, [depth], func
+    if (typeof a !== "object")
+      throw new TypeError("missing output array type argument to ArrayType mapPar");
+    else if (typeof b === "number" && typeof c === "function")
+      return mapExplicit(this, b, a, c);
+    else if (typeof b === "function")
       return mapExplicit(this, 1, a, b);
-    else (typeof c === "function")
-      return mapExplicit(this, a, b, c);
+    else
+      throw new TypeError("missing function argument to ArrayType mapPar");
   };
 
   function mapExplicit(inArray, depth, outputType, func) {
@@ -151,7 +165,7 @@
 
     for (var i = 0; i < totalLength; i++) {
       // Position handle to point at &result[...indices]
-      Handle.move.apply(null, [inHandle, result].concat(indices));
+      Handle.move.apply(null, [inHandle, inArray].concat(indices));
       Handle.move.apply(null, [outHandle, result].concat(indices));
 
       // Awkward. Reify if this is a scalar.
