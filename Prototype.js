@@ -10,6 +10,11 @@
   var int32 = TypedObject.int32;
   var float32 = TypedObject.float32;
   var float64 = TypedObject.float64;
+  var objectType = TypedObject.objectType;
+
+  function isScalarType(t) {
+    return !(t instanceof ArrayType) && !(t instanceof StructType);
+  }
 
   ArrayType.prototype.build = function build(a, b) {
     if (typeof a === "function")
@@ -138,7 +143,7 @@
       throw new TypeError("Can't build unsized array type");
 
     // Compute iteration space for input and output and compare
-    var inputType = TypedObject.type(inArray);
+    var inputType = objectType(inArray);
     var [inIterationSpace, inGrainType, _] =
       computeIterationSpace(inputType, depth);
     var [iterationSpace, outGrainType, totalLength] =
@@ -160,8 +165,7 @@
     var inHandle = inGrainType.handle();
     var outHandle = outGrainType.handle();
 
-    var inGrainTypeIsScalar = !(inGrainType instanceof ArrayType ||
-                                inGrainType instanceof StructType);
+    var inGrainTypeIsScalar = isScalarType(inGrainType);
 
     for (var i = 0; i < totalLength; i++) {
       // Position handle to point at &result[...indices]
@@ -186,4 +190,48 @@
     return result;
   }
 
+  ArrayType.prototype.prototype.reducePar = function(a, b, c) {
+    // Arguments: [outputType], func, [initial]
+    if (typeof a === "function") {
+      // Default outputType to the elementType.
+      // FIXME we likely want Any instead, unimplemented
+      var elementType = objectType(this).elementType;
+      return ReducePar(this, elementType, a, b);
+    } else if (typeof b === "function") {
+      return ReducePar(this, a, b, c);
+    } else {
+      throw new TypeError("No function supplied");
+    }
+  }
+
+  function ReducePar(array, outputType, func, initial) {
+    var start, value;
+
+    // Hmm. Providing a handle does seem to require something like
+    // this.
+    var TempType = new ArrayType(outputType, 1);
+    var temp = new TempType();
+    var handle = outputType.handle(temp, 0);
+
+    if (initial === undefined) {
+      if (array.length < 2)
+        throw new RangeError("Cannot reduce an array of length " +
+                             array.length +
+                             " without an initial value");
+      start = 1;
+      Handle.set(handle, array[0]);
+    } else {
+      start = 0;
+      Handle.set(handle, initial);
+    }
+
+    for (var i = start; i < array.length; i++) {
+      print("func=", func);
+      var r = func(temp[0], array[i], handle);
+      if (r !== undefined)
+        Handle.set(handle, r);
+    }
+
+    return temp[0];
+  }
 })();
