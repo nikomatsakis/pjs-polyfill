@@ -192,16 +192,8 @@
 
   ArrayType.prototype.prototype.reducePar = function(a, b, c) {
     // Arguments: [outputType], func, [initial]
-    if (typeof a === "function") {
-      // Default outputType to the elementType.
-      // FIXME we likely want Any instead, unimplemented
-      var elementType = objectType(this).elementType;
-      return ReducePar(this, elementType, a, b);
-    } else if (typeof b === "function") {
-      return ReducePar(this, a, b, c);
-    } else {
-      throw new TypeError("No function supplied");
-    }
+    // FIXME typeof uint8 === "function", need a better way
+    return ReducePar(this, a, b, c);
   }
 
   function ReducePar(array, outputType, func, initial) {
@@ -226,7 +218,6 @@
     }
 
     for (var i = start; i < array.length; i++) {
-      print("func=", func);
       var r = func(temp[0], array[i], handle);
       if (r !== undefined)
         Handle.set(handle, r);

@@ -59,17 +59,14 @@ function reduceUint8s() {
   var uint8Array = new ArrayType(uint8, 5);
   var array = new uint8Array([128, 129, 130, 131, 132]);
 
-  var sum = array.reducePar(uint8, (a, b) => {
-    print("Hi", a, b);
-    return a + b
-  });
+  var sum = array.reducePar(uint8, (a, b) => a + b);
   assertEq(sum, (128+129+130+131+132) % 256);
 
   var sum = array.reducePar(float64, (a, b) => a + b);
   assertEq(sum, 128+129+130+131+132);
 }
 
-function reduceVectorss() {
+function reduceVectors() {
   var VectorType = new ArrayType(uint32, 3);
   var VectorsType = new ArrayType(VectorType, 3);
   var array = new VectorsType([[1, 2, 3],
@@ -100,7 +97,9 @@ try {
 
   twoDimensionalArrayOfStructsWithDepth1();
 
-  // reduceUint8s();
+  reduceUint8s();
+
+  reduceVectors();
 
 } catch (e) {
   print(e.name);
