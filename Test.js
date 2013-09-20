@@ -59,11 +59,11 @@ function reduceUint8s() {
   var uint8Array = new ArrayType(uint8, 5);
   var array = new uint8Array([128, 129, 130, 131, 132]);
 
-  var sum = array.reducePar(uint8, (a, b) => a + b);
+  var sum = array.reducePar((a, b) => a + b);
   assertEq(sum, (128+129+130+131+132) % 256);
 
-  var sum = array.reducePar(float64, (a, b) => a + b);
-  assertEq(sum, 128+129+130+131+132);
+  // var sum = array.reducePar(float64, (a, b) => a + b);
+  // assertEq(sum, 128+129+130+131+132);
 }
 
 function reduceVectors() {
@@ -73,7 +73,14 @@ function reduceVectors() {
                                [4, 5, 6],
                                [7, 8, 9]]);
 
-  var sum = array.reducePar(VectorType, vectorAdd);
+  var sum = array.reducePar(vectorAdd);
+  assertTypedEqual(VectorType,
+                   sum,
+                   new VectorType([1+4+7,
+                                   2+5+8,
+                                   3+6+9]));
+
+  var sum = array.reducePar(vectorAddFunctional);
   assertTypedEqual(VectorType,
                    sum,
                    new VectorType([1+4+7,
@@ -85,6 +92,12 @@ function reduceVectors() {
     for (var i = 0; i < l.length; i++)
       l[i] += r[i];
   }
+
+  function vectorAddFunctional(l, r) {
+    assertEq(l.length, r.length);
+    return VectorType.build(1, i => l[i] + r[i]);
+  }
+
 }
 
 try {

@@ -190,26 +190,43 @@
     return result;
   }
 
-  ArrayType.prototype.prototype.reducePar = function(a, b, c) {
-    // Arguments: [outputType], func, [initial]
+  ArrayType.prototype.prototype.reducePar = function(a, b) {
+    // Arguments: func, [initial]
     // FIXME typeof uint8 === "function", need a better way
-    return ReducePar(this, a, b, c);
+    var outputType = objectType(this).elementType;
+    return ReducePar(this, outputType, a, b);
   }
 
   function ReducePar(array, outputType, func, initial) {
     var start, value;
 
-    // Hmm. Providing a handle does seem to require something like
-    // this.
-    var TempType = new ArrayType(outputType, 1);
-    var temp = new TempType();
-    var handle = outputType.handle(temp, 0);
+    if (initial === undefined && array.length < 2)
+      throw new RangeError("Cannot reduce an array of length " +
+                           array.length +
+                           " without an initial value");
+
+    if (isScalarType(outputType)) {
+      if (initial === undefined) {
+        start = 1;
+        value = array[0];
+      } else  {
+        start = 0;
+        value = outputType(initial);
+      }
+
+      for (var i = start; i < array.length; i++)
+        value = outputType(func(value, array[i]));
+
+      return value;
+    }
+
+    value = new outputType();
+
+    // FIXME If Handle.set etc were offered for all
+    //       typed datums, no handle would be needed
+    var handle = outputType.handle(value);
 
     if (initial === undefined) {
-      if (array.length < 2)
-        throw new RangeError("Cannot reduce an array of length " +
-                             array.length +
-                             " without an initial value");
       start = 1;
       Handle.set(handle, array[0]);
     } else {
@@ -218,11 +235,11 @@
     }
 
     for (var i = start; i < array.length; i++) {
-      var r = func(temp[0], array[i], handle);
+      var r = func(value, array[i]);
       if (r !== undefined)
         Handle.set(handle, r);
     }
 
-    return temp[0];
+    return value;
   }
 })();
