@@ -177,7 +177,7 @@
 
       // Invoke func(element, ...indices, collection, out)
       var args = [element];
-      Array.push.apply(args, indices);
+      Array.prototype.push.apply(args, indices);
       args.push(inArray, outHandle);
       var r = func.apply(null, args);
       if (r !== undefined)
