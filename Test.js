@@ -100,6 +100,36 @@ function reduceVectors() {
 
 }
 
+function scatterUint8sPermute() {
+  var uint8Array = new ArrayType(uint8, 5);
+  var array = new uint8Array([124, 120, 122, 123, 121]);
+
+  var perm = array.scatterPar(uint8Array, [4, 0, 2, 3, 1]);
+  assertTypedEqual(uint8Array, perm, [120, 121, 122, 123, 124]);
+}
+
+function scatterUint8sPermuteIncomplete() {
+  var uint8Array4 = new ArrayType(uint8, 4);
+  var uint8Array5 = new ArrayType(uint8, 5);
+  var array = new uint8Array4([124, 120, 122, 123]);
+
+  var perm;
+  perm = array.scatterPar(uint8Array5, [4, 0, 2, 3]);
+  assertTypedEqual(uint8Array5, perm, [120,  0, 122, 123, 124]);
+
+  perm = array.scatterPar(uint8Array5, [4, 0, 2, 3], 77);
+  assertTypedEqual(uint8Array5, perm, [120, 77, 122, 123, 124]);
+}
+
+function scatterUint8sHistogram() {
+  var uint32Array5 = new ArrayType(uint32, 5);
+  var uint32Array3 = new ArrayType(uint32, 3);
+  var array = new uint32Array5([1, 10, 100, 1000, 10000]);
+
+  var perm = array.scatterPar(uint32Array3, [1, 1, 2, 1, 0], 0, (a,b) => a+b);
+  assertTypedEqual(uint32Array3, perm, [10000, 1011, 100]);
+}
+
 try {
 
   oneDimensionalArrayOfUints();
@@ -114,6 +144,10 @@ try {
 
   reduceVectors();
 
+
+  scatterUint8sPermute();
+  scatterUint8sPermuteIncomplete();
+  scatterUint8sHistogram();
 } catch (e) {
   print(e.name);
   print(e.message);

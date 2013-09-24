@@ -242,4 +242,32 @@
 
     return value;
   }
+
+  ArrayType.prototype.prototype.scatterPar = function(a, b, c, d) {
+    // Arguments: outputArrayType, indices, defaultValue, conflictFunction
+    return ScatterPar(this, a, b, c, d);
+  };
+
+  function ScatterPar(array, outputType, indices, defaultValue, conflictFunc) {
+    var result = new outputType();
+    var bittype = new ArrayType(uint8, result.length);
+    var bitvec = new bittype();
+    var elemType = outputType.elementType;
+    var i, j;
+    if (defaultValue !== elemType(undefined)) {
+      for (i = 0; i < result.length; i++) { result[i] = defaultValue; }
+    }
+
+    for (i = 0; i < indices.length; i++) {
+      j = indices[i];
+      if (!bitvec[j]) {
+        result[j] = array[i];
+        bitvec[j] = 1;
+      } else {
+        result[j] = conflictFunc(array[i], result[j]);
+      }
+    }
+    return result;
+  }
+
 })();
