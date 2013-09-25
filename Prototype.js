@@ -263,8 +263,12 @@
       if (!bitvec[j]) {
         result[j] = array[i];
         bitvec[j] = 1;
+      } else if (conflictFunc === undefined) {
+        // ThrowError(JSMSG_PAR_ARRAY_SCATTER_CONFLICT);
+        throw new Error("JSMSG_PAR_ARRAY_SCATTER_CONFLICT");
       } else {
-        result[j] = conflictFunc(array[i], result[j]);
+        // FIXME should we pass an outptr? handle into result[j] here?
+        result[j] = conflictFunc(result[j], elemType(array[i]));
       }
     }
     return result;
