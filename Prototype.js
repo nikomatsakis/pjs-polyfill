@@ -242,4 +242,36 @@
 
     return value;
   }
+
+  ArrayType.prototype.prototype.scatterPar = function(a, b, c, d) {
+    // Arguments: outputArrayType, indices, defaultValue, conflictFunction
+    return ScatterPar(this, a, b, c, d);
+  };
+
+  function ScatterPar(array, outputType, indices, defaultValue, conflictFunc) {
+    var result = new outputType();
+    var bittype = new ArrayType(uint8, result.length);
+    var bitvec = new bittype();
+    var elemType = outputType.elementType;
+    var i, j;
+    if (defaultValue !== elemType(undefined)) {
+      for (i = 0; i < result.length; i++) { result[i] = defaultValue; }
+    }
+
+    for (i = 0; i < indices.length; i++) {
+      j = indices[i];
+      if (!bitvec[j]) {
+        result[j] = array[i];
+        bitvec[j] = 1;
+      } else if (conflictFunc === undefined) {
+        // ThrowError(JSMSG_PAR_ARRAY_SCATTER_CONFLICT);
+        throw new Error("JSMSG_PAR_ARRAY_SCATTER_CONFLICT");
+      } else {
+        // FIXME should we pass an outptr? handle into result[j] here?
+        result[j] = conflictFunc(result[j], elemType(array[i]));
+      }
+    }
+    return result;
+  }
+
 })();
