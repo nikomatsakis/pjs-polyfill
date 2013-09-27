@@ -111,7 +111,7 @@
   /*
    * For code like:
    *
-   *   var A = new ArrayType(uint8, 10);
+   *   var A = uint8.array(10)
    *
    * then
    *
@@ -250,7 +250,7 @@
 
   function ScatterPar(array, outputType, indices, defaultValue, conflictFunc) {
     var result = new outputType();
-    var bittype = new ArrayType(uint8, result.length);
+    var bittype = uint8.array(result.length);
     var bitvec = new bittype();
     var elemType = outputType.elementType;
     var i, j;

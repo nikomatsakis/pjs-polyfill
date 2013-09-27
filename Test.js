@@ -2,7 +2,7 @@ if (typeof(libdir) === "undefined") { load("Util.js"); } else { load(libdir+"/"+
 
 function oneDimensionalArrayOfUints() {
   var grain = uint32;
-  var type = new ArrayType(grain, 4);
+  var type = grain.array(4);
   var r1 = type.build(x => x * 2);
   var r2 = type.build((x, out) => Handle.set(out, x * 2));
   assertTypedEqual(type, r1, new type([0, 2, 4, 6]));
@@ -11,7 +11,7 @@ function oneDimensionalArrayOfUints() {
 
 function oneDimensionalArrayOfStructs() {
   var grain = new StructType({f: uint32});
-  var type = new ArrayType(grain, 4);
+  var type = grain.array(4);
   var r1 = type.build(x => new grain({f: x * 2}));
   var r2 = type.build((x, out) => { out.f = x * 2; });
   assertTypedEqual(type, r1, new type([{f:0}, {f:2},
@@ -21,7 +21,7 @@ function oneDimensionalArrayOfStructs() {
 
 function twoDimensionalArrayOfStructsWithDepth2() {
   var grain = new StructType({f: uint32});
-  var type = new ArrayType(new ArrayType(grain, 2), 2);
+  var type = grain.array(2, 2);
 
   var r1 = type.build(2, (x, y) => {
     return new grain({f: x * 10 + y});
@@ -37,8 +37,8 @@ function twoDimensionalArrayOfStructsWithDepth2() {
 }
 
 function twoDimensionalArrayOfStructsWithDepth1() {
-  var grain = new ArrayType(new StructType({f: uint32}), 2);
-  var type = new ArrayType(grain, 2);
+  var grain = new StructType({f: uint32}).array(2);
+  var type = grain.array(2);
 
   var r1 = type.build((x) => {
     return new grain([{f: x * 10},
@@ -56,7 +56,7 @@ function twoDimensionalArrayOfStructsWithDepth1() {
 }
 
 function reduceUint8s() {
-  var uint8Array = new ArrayType(uint8, 5);
+  var uint8Array = uint8.array(5);
   var array = new uint8Array([128, 129, 130, 131, 132]);
 
   var sum = array.reducePar((a, b) => a + b);
@@ -67,8 +67,8 @@ function reduceUint8s() {
 }
 
 function reduceVectors() {
-  var VectorType = new ArrayType(uint32, 3);
-  var VectorsType = new ArrayType(VectorType, 3);
+  var VectorType = uint32.array(3);
+  var VectorsType = VectorType.array(3);
   var array = new VectorsType([[1, 2, 3],
                                [4, 5, 6],
                                [7, 8, 9]]);
@@ -101,7 +101,7 @@ function reduceVectors() {
 }
 
 function scatterUint8sPermute() {
-  var uint8Array = new ArrayType(uint8, 5);
+  var uint8Array = uint8.array(5);
   var array = new uint8Array([124, 120, 122, 123, 121]);
 
   var perm = array.scatterPar(uint8Array, [4, 0, 2, 3, 1]);
@@ -109,8 +109,8 @@ function scatterUint8sPermute() {
 }
 
 function scatterUint8sPermuteIncomplete() {
-  var uint8Array4 = new ArrayType(uint8, 4);
-  var uint8Array5 = new ArrayType(uint8, 5);
+  var uint8Array4 = uint8.array(4);
+  var uint8Array5 = uint8.array(5);
   var array = new uint8Array4([124, 120, 122, 123]);
 
   var perm;
@@ -122,8 +122,8 @@ function scatterUint8sPermuteIncomplete() {
 }
 
 function scatterUint8sHistogram() {
-  var uint32Array5 = new ArrayType(uint32, 5);
-  var uint32Array3 = new ArrayType(uint32, 3);
+  var uint32Array5 = uint32.array(5);
+  var uint32Array3 = uint32.array(3);
   var array = new uint32Array5([1, 10, 100, 1000, 10000]);
 
   var hist = array.scatterPar(uint32Array3, [1, 1, 2, 1, 0], 0, (a,b) => a+b);
@@ -131,8 +131,8 @@ function scatterUint8sHistogram() {
 }
 
 function scatterUint8sCollisionThrows() {
-  var uint32Array5 = new ArrayType(uint32, 5);
-  var uint32Array3 = new ArrayType(uint32, 3);
+  var uint32Array5 = uint32.array(5);
+  var uint32Array3 = uint32.array(3);
   var array = new uint32Array5([1, 10, 100, 1000, 10000]);
 
   var unset_nonce = new Object();
@@ -145,8 +145,8 @@ function scatterUint8sCollisionThrows() {
 }
 
 function scatterUint8sConflictIsAssocNonCommute() {
-  var uint32Array5 = new ArrayType(uint32, 5);
-  var uint32Array3 = new ArrayType(uint32, 3);
+  var uint32Array5 = uint32.array(5);
+  var uint32Array3 = uint32.array(3);
   var array = new uint32Array5([1, 10, 100, 1000, 10000]);
 
   // FIXME strawman spec says conflict must be associative, but does
