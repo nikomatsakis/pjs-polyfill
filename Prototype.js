@@ -12,6 +12,21 @@
   var float64 = TypedObject.float64;
   var objectType = TypedObject.objectType;
 
+  // should eventually become macros
+  function NUM_BYTES(bits) {
+    return (bits + 7) >> 3;
+  }
+  function SET_BIT(data, index) {
+    var word = index >> 3;
+    var mask = 1 << (index & 0x7);
+    data[word] |= mask;
+  }
+  function GET_BIT(data, index) {
+    var word = index >> 3;
+    var mask = 1 << (index & 0x7);
+    return (data[word] & mask) != 0;
+  }
+
   function isScalarType(t) {
     return !(t instanceof ArrayType) && !(t instanceof StructType);
   }
@@ -190,6 +205,40 @@
     return result;
   }
 
+  ArrayType.prototype.prototype.filter = function(func) {
+    return Filter(this, func);
+  }
+
+  ArrayType.prototype.prototype.filterPar = ArrayType.prototype.prototype.filter;
+
+  var ByteArray = uint8.array();
+
+  function Filter(array, func) {
+    var arrayType = objectType(array);
+    if (!(arrayType instanceof ArrayType))
+      throw new TypeError("Expected input to be of array type");
+
+    var elementType = arrayType.elementType;
+    var flags = new ByteArray(NUM_BYTES(array.length));
+    var handle = elementType.handle();
+    var count = 0;
+    for (var i = 0; i < array.length; i++) {
+      Handle.move(handle, array, i);
+      if (func(Handle.get(handle), i, array)) {
+        SET_BIT(flags, i);
+        count++;
+      }
+    }
+
+    var resultType = (arrayType.variable ? arrayType : arrayType.unsized);
+    var result = new resultType(count);
+    for (var i = 0, j = 0; i < array.length; i++) {
+      if (GET_BIT(flags, i))
+        result[j++] = array[i];
+    }
+    return result;
+  }
+
   ArrayType.prototype.prototype.reducePar = function(a, b) {
     // Arguments: func, [initial]
     // FIXME typeof uint8 === "function", need a better way
@@ -250,8 +299,7 @@
 
   function ScatterPar(array, outputType, indices, defaultValue, conflictFunc) {
     var result = new outputType();
-    var bittype = uint8.array(result.length);
-    var bitvec = new bittype();
+    var bitvec = new ByteArray(NUM_BYTES(result.length));
     var elemType = outputType.elementType;
     var i, j;
     if (defaultValue !== elemType(undefined)) {
@@ -260,9 +308,9 @@
 
     for (i = 0; i < indices.length; i++) {
       j = indices[i];
-      if (!bitvec[j]) {
+      if (!GET_BIT(bitvec, j)) {
         result[j] = array[i];
-        bitvec[j] = 1;
+        SET_BIT(bitvec, j);
       } else if (conflictFunc === undefined) {
         // ThrowError(JSMSG_PAR_ARRAY_SCATTER_CONFLICT);
         throw new Error("JSMSG_PAR_ARRAY_SCATTER_CONFLICT");

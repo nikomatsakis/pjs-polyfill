@@ -9,6 +9,7 @@ var int16 = TypedObject.int16;
 var int32 = TypedObject.int32;
 var float32 = TypedObject.float32;
 var float64 = TypedObject.float64;
+var objectType = TypedObject.objectType;
 
 function assertTypedEqual(type, a_orig, b_orig) {
   try {
