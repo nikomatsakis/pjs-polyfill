@@ -1,4 +1,5 @@
-if (typeof(libdir) === "undefined") { load("Util.js"); } else { load(libdir+"/"+"Util.js"); }
+function load_lib(n) { load(typeof(libdir)==="undefined" ? n : libdir+"/"+n); }
+load_lib("Util.js");
 
 // Test name format:
 
