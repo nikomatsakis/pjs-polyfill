@@ -7,8 +7,8 @@ if (typeof(libdir) === "undefined") { load("Util.js"); } else { load(libdir+"/"+
 // (potentially an array themselves.)
 
 function mapOneDimArrayOfUint8ToUint32s() {
-  var intype = new ArrayType(uint8, 4);
-  var type = new ArrayType(uint32, 4);
+  var intype = uint8.array(4);
+  var type = uint32.array(4);
   var i1 = intype.build(i => i);
   var r1 = i1.mapPar(type, j => j*2);
   var r2 = i1.mapPar(type, 1, j => j*2);
@@ -17,8 +17,8 @@ function mapOneDimArrayOfUint8ToUint32s() {
 }
 
 function mapOneDimArrayOfUint32ToUint8s() {
-  var intype = new ArrayType(uint32, 4);
-  var type = new ArrayType(uint8, 4);
+  var intype = uint32.array(4);
+  var type = uint8.array(4);
   var i1 = intype.build(i => i);
   var r1 = i1.mapPar(type, j => j*200);
   var r2 = i1.mapPar(type, 1, j => j*200);
@@ -27,9 +27,9 @@ function mapOneDimArrayOfUint32ToUint8s() {
 }
 
 function mapTwoDimArrayOfUint8ToUint32s() {
-  var intype = new ArrayType(new ArrayType(uint8, 4), 4);
-  var rowtype = new ArrayType(uint32, 4);
-  var type = new ArrayType(rowtype, 4);
+  var intype = uint8.array(4).array(4);
+  var rowtype = uint32.array(4);
+  var type = rowtype.array(4);
   var i1 = new type([[10, 11, 12, 13],
                      [20, 21, 22, 23],
                      [30, 31, 32, 33],
@@ -52,9 +52,9 @@ function mapTwoDimArrayOfUint8ToUint32s() {
 }
 
 function mapTwoDimArrayOfUint32ToUint8s() {
-  var intype = new ArrayType(new ArrayType(uint32, 4), 4);
-  var rowtype = new ArrayType(uint8, 4);
-  var type = new ArrayType(rowtype, 4);
+  var intype = uint32.array(4).array(4);
+  var rowtype = uint8.array(4);
+  var type = rowtype.array(4);
   var i1 = new type([[10, 11, 12, 13],
                      [20, 21, 22, 23],
                      [30, 31, 32, 33],
@@ -77,8 +77,8 @@ function mapTwoDimArrayOfUint32ToUint8s() {
 }
 
 function mapOneDimArrayOfArrayOfUint8ToUint32s() {
-  var intype = new ArrayType(new ArrayType(uint8, 4), 4);
-  var type = new ArrayType(uint32, 4);
+  var intype = uint8.array(4).array(4);
+  var type = uint32.array(4);
   var i1 = new intype([[0xdd, 0xcc, 0xbb, 0xaa],
                        [0x09, 0x08, 0x07, 0x06],
                        [0x15, 0x14, 0x13, 0x12],
@@ -93,8 +93,8 @@ function mapOneDimArrayOfArrayOfUint8ToUint32s() {
 }
 
 function mapOneDimArrayOfUint32ToArrayOfUint8s() {
-  var intype = new ArrayType(uint32, 4);
-  var type = new ArrayType(new ArrayType(uint8, 4), 4);
+  var intype = uint32.array(4);
+  var type = uint8.array(4).array(4);
   var i1 = new intype([0xddccbbaa, 0x09080706, 0x15141312, 0x23324150]);
 
   function divide(a) { return [a >> 24 & 0xFF, a >> 16 & 0xFF, a >> 8 & 0xFF, a & 0xFF]; }
@@ -117,7 +117,7 @@ function doubleG(g) { return new Grain({f: g.f * 2}); }
 function tenG(x, y) { return new Grain({f: x * 10 + y}); }
 
 function mapOneDimArrayOfStructsToStructs() {
-  var type = new ArrayType(Grain, 4);
+  var type = Grain.array(4);
   var i1 = type.build(wrapG);
   var r1 = i1.mapPar(type, doubleG);
   var r2 = i1.mapPar(type, 1, doubleG);
@@ -129,8 +129,8 @@ function mapOneDimArrayOfStructsToStructs() {
 }
 
 function mapTwoDimArrayOfStructsToStructs() {
-  var rowtype = new ArrayType(Grain, 2);
-  var type = new ArrayType(rowtype, 2);
+  var rowtype = Grain.array(2);
+  var type = rowtype.array(2);
   var i1 = type.build(2, tenG);
   var r1 = i1.mapPar(type, 2, doubleG);
   var r2 = i1.mapPar(type, 1, (m) => m.mapPar(rowtype, 1, doubleG));
@@ -142,8 +142,8 @@ function mapTwoDimArrayOfStructsToStructs() {
 }
 
 function mapOneDimArrayOfStructsToArrayOfStructs() {
-  var Line = new ArrayType(Grain, 2);
-  var Box = new ArrayType(Line, 2);
+  var Line = Grain.array(2);
+  var Box = Line.array(2);
   var i1 = Line.build(wrapG);
   var r1 = i1.mapPar(Box, (g) => Line.build((y) => tenG(g.f, y)));
   var r2 = i1.mapPar(Box, (g) => i1.mapPar(Line, (y) => tenG(g.f, y.f)));
