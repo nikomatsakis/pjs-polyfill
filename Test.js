@@ -201,6 +201,7 @@ try {
   twoDimensionalArrayOfStructsWithDepth1();
 
   load_lib("TestMap.js");
+  load_lib("TestFrom.js");
 
   reduceUint8s();
 
