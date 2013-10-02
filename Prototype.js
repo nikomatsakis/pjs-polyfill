@@ -123,6 +123,20 @@
 
   ArrayType.prototype.buildPar = Array.prototype.build;
 
+  ArrayType.prototype.fromPar = function(a, b, c) {
+    // Arguments: arrayLike, [depth], func
+    if (typeof a !== "object")
+      throw new TypeError("missing input array argument to ArrayType from");
+    else if (typeof b === "number" && typeof c === "function")
+      return mapExplicit(a, b, this, c);
+    else if (typeof b === "function")
+      return mapExplicit(a, 1, this, b);
+    else
+      throw new TypeError("missing function argument to ArrayType from");
+  };
+
+  ArrayType.prototype.from = ArrayType.prototype.fromPar;
+
   /*
    * For code like:
    *

@@ -1,4 +1,5 @@
-if (typeof(libdir) === "undefined") { load("Util.js"); } else { load(libdir+"/"+"Util.js"); }
+function load_lib(n) { load(typeof(libdir)==="undefined" ? n : libdir+"/"+n); }
+load_lib("Util.js");
 
 function oneDimensionalArrayOfUints() {
   var grain = uint32;
@@ -198,6 +199,9 @@ try {
   twoDimensionalArrayOfStructsWithDepth2();
 
   twoDimensionalArrayOfStructsWithDepth1();
+
+  load_lib("TestMap.js");
+  load_lib("TestFrom.js");
 
   reduceUint8s();
 
